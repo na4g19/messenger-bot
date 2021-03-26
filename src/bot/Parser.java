@@ -36,11 +36,15 @@ public class Parser {
     @SuppressWarnings("unchecked")
     public void parse(String command) throws ParserException {
 
+        System.out.println(command);
+
         tokenizer.tokenize(command);
         tokens = (LinkedList<Token>) tokenizer.getTokens().clone();
         nextToken = tokens.getFirst();
 
         parseCommand();
+
+        System.out.println(nextToken.getID());
 
         // All of the tokens should be used up if the command has a correct syntax
         if (!nextToken.getID().equals(Token.EMPTY_TOKEN)) {
@@ -75,6 +79,9 @@ public class Parser {
             case "!name":
                 parseName();
                 break;
+            case "!weather":
+                parseWeather();
+                break;
             case "!square":
                 parseSquare();
                 break;
@@ -96,6 +103,13 @@ public class Parser {
         nextToken();
     }
 
+    //Parses the !weather command
+    private void parseWeather() {
+        nextToken();
+        parseWet();
+    }
+
+
     /**
      * Parses the !square command
      */
@@ -109,7 +123,7 @@ public class Parser {
      */
     private void parseTimer() {
         nextToken();
-        parseTimerFunc();
+        parseTimerStart();
     }
 
     /**
@@ -119,10 +133,21 @@ public class Parser {
         nextToken();
     }
 
+
+    private void parseWet()
+    {
+        if (nextToken.getID().equals("WORD"))
+        {
+            nextToken();
+        } else {
+            throw new ParserException("Word Expected");
+        }
+    }
     /**
      * Parses the main argument of !timer
      */
-    private void parseTimerFunc() {
+    private void parseTimerStart()
+    {
 
         if (nextToken.getSequence().equals("start")) {
             nextToken();
@@ -130,7 +155,8 @@ public class Parser {
             if (!nextToken.getID().equals(Token.EMPTY_TOKEN)) {
                 parseInteger();
             }
-        } else if (nextToken.getSequence().equals("stop")) {
+        }
+        else if(nextToken.getSequence().equals("stop")) {
             nextToken();
         } else {
             throw new ParserException("Undefined timer function");
@@ -142,7 +168,8 @@ public class Parser {
      */
     private void parseInteger() {
 
-        if (nextToken.getID().equals("INTEGER")) {
+        if (nextToken.getID().equals("INTEGER"))
+        {
             nextToken();
         } else {
             throw new ParserException("Integer Expected");

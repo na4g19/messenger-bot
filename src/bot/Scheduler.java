@@ -1,59 +1,117 @@
 package bot;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import bot.commands.Command;
 
-// FIXME: 15/02/2021 MEGA GIGA SUPER ALFA VERSIJA
-// FIXME: 15/02/2021 change static to singleton
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Tracks commands executing in the background
+ * Schedules the execution of commands
  */
-public class Scheduler {
+public class Scheduler implements Runnable {
 
-    // Maps unique IDs to commands executing in the background
-    private static Map<String, Command> runningCommands = new HashMap<>();
+    // Interactor shared between all processes
+    private static Interactor interactor;
 
-    // FIXME: 15/02/2021 generate unique ids to allow multiple timers
-    public static void addCommand(Command command) {
-        runningCommands.put(command.getCommandID(), command);
+    // Maps unique IDs to threads executing in the background
+    private static Map<String, Thread> runningThreads = new ConcurrentHashMap<>();
+
+    // Maps unique IDs to processes executing in the background
+    private static Map<String, Process> runningProcesses = new ConcurrentHashMap<>();
+
+    /**
+     * Starts the process in a new thread
+     * @param process
+     */
+    public static void scheduleProcess(Process process) {
+        Thread thread = new Thread(process);
+        String id = Scheduler.assignUniqueID(process);
+        runningThreads.put(id, thread);
+        runningProcesses.put(id, process);
+        runningThreads.get(id).start();
     }
 
     /**
-     * Checks if a command with specified ID is running in the background
-     *
-     * @param ID of the command to be checked
-     * @return true if command is running, false otherwise
+     * Thread waits for it's turn to send text
+     * @param text
      */
-    public static boolean contains(String ID) {
-        return runningCommands.containsKey(ID);
+    public synchronized static void scheduleSendText(String text) {
+        interactor.sendText(text);
     }
 
     /**
-     * Returns the command with the specified id
-     *
-     * @param id id of the command
-     * @return the command
+     * Thread waits for it's turn to send media
+     * @param fileName
      */
-    public static Command getRunningCommand(String id) {
-        return runningCommands.get(id);
+    public synchronized static void scheduleSendMedia(String fileName) {
+        interactor.sendMedia(fileName);
     }
 
     /**
-     * Removes the command with the specified id
-     *
-     * @param id id of the command
+     * Assigns an interactor to the scheduler
+     * @param localInteractor
      */
-    public static void removeRunningCommand(String id) {
-        runningCommands.remove(id);
+    public static void startScheduler(Interactor localInteractor) {
+
+        interactor = localInteractor;
+        Thread thread = new Thread(new Scheduler());
+        runningThreads.put("SCHEDULER", thread);
+        thread.start();
     }
 
     /**
-     * Remove commands that finished executing
+     * Assigns a unique ID to each process
+     * @param process
+     * @return
      */
-    public void removeCommands() {
+    private static String assignUniqueID(Process process) {
+        
+        String id = process.getProcessID();
+        int i = 1;
+        
+        while(runningThreads.containsKey(id)) {
+            id = process.getProcessID() + i;
+            i++;
+        }
+        return id;
+    }
 
+    /**
+     * Checks if process with spefcified id is running
+     * @param id
+     * @return true if running, false otherwise
+     */
+    public static boolean isProcessRunning(String id) {
+        return runningThreads.containsKey(id);
+    }
+
+    /**
+     * Returns a running command with the given ID, or null if command isn't executing
+     * @param id
+     * @return
+     */
+    public static Command getCommandByID(String id) {
+        return runningProcesses.containsKey(id) ? runningProcesses.get(id).getCommand() : null;
+    }
+
+    /**
+     * Scheduler runs in a new thread, constantly removing any processes that have finished executing
+     */
+    @Override
+    public void run() {
+        
+        while(true) {
+
+            // FIXME: 26/03/2021 kas kazkiek laiko
+            // FIXME: 26/03/2021 race condition when checking from other threads
+            for(Map.Entry<String, Thread> command : runningThreads.entrySet()) {
+
+                if(command.getValue().getState().equals(Thread.State.TERMINATED)) {
+                    runningThreads.remove(command.getKey());
+                    runningProcesses.remove(command.getKey());
+                }
+            }
+        }
     }
 }

@@ -15,7 +15,7 @@ public class HelpDocsBuilder {
 
     private List<Option> options = new ArrayList<>();
 
-    // FIXME: 17/02/2021 message size limit?
+    // FIXME: 04/02/2021 message size limit?
     public String printDocs() {
 
         StringBuilder builder = new StringBuilder();

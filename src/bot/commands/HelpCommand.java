@@ -1,7 +1,8 @@
 package bot.commands;
 
 import bot.HelpDocsBuilder;
-import bot.Interactor;
+import bot.Scheduler;
+import bot.commands.timer.TimerStartCommand;
 
 /**
  * Generates documentation for all possible commands
@@ -13,16 +14,16 @@ public class HelpCommand extends Command {
     }
 
     @Override
-    public void execute(Interactor interactor) {
+    public void execute() {
 
         StringBuilder docs = new StringBuilder();
 
         docs.append(new NameCommand().constructDocs().printDocs());
         docs.append(new SquareCommand().constructDocs().printDocs());
-        docs.append(new TimerCommand().constructDocs().printDocs());
+        docs.append(new TimerStartCommand().constructDocs().printDocs());
         docs.append(new HelpCommand().constructDocs().printDocs());
 
-        interactor.sendText(docs.toString());
+        Scheduler.scheduleSendText(docs.toString());
     }
 
     @Override

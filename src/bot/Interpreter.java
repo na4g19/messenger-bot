@@ -4,6 +4,8 @@ import java.util.LinkedList;
 
 import bot.Tokenizer.Token;
 import bot.commands.*;
+import bot.commands.timer.TimerStartCommand;
+import bot.commands.timer.TimerStopCommand;
 import bot.exceptions.InterpreterException;
 
 /**
@@ -27,9 +29,28 @@ public class Interpreter {
                 outputCommand = new SquareCommand(tokens.get(1).getSequence());
                 break;
             case "!timer":
-                outputCommand = new TimerCommand(tokens);
+                determineTimerFunction(tokens);
+                break;
             case "!help":
                 outputCommand = new HelpCommand();
+                break;
+            case "!weather":
+                outputCommand = new WeatherCommand(tokens);
+        }
+    }
+
+    private void determineTimerFunction(LinkedList<Token> tokens) {
+
+        LinkedList<Token> tokensCopy = (LinkedList<Token>) tokens.clone();
+        tokensCopy.pop();
+        String function = tokensCopy.getFirst().getSequence();
+
+        switch(function) {
+            case "start" :
+                outputCommand = new TimerStartCommand(tokens);
+                break;
+            case "stop" :
+                outputCommand = new TimerStopCommand();
         }
     }
 

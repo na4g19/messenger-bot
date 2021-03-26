@@ -4,15 +4,17 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.Key;
 
 /**
  * Writes messages into chat
  */
 public class Interactor {
 
-    WebDriver driver;
+    private WebDriver driver;
 
     public Interactor(WebDriver driver) {
         this.driver = driver;
@@ -20,61 +22,66 @@ public class Interactor {
 
     /**
      * Composes the given text into a message and sends it
+     *
      * @param text the text to be sent
      */
     public void sendText(String text) {
-        driver.findElement(By.xpath("//div[@role='textbox']")).sendKeys(text + Keys.ENTER);
+        String modifiedText = text.replace("\n", Keys.chord(Keys.SHIFT, Keys.ENTER));
+        driver.findElement(By.xpath("//div[@role='textbox']")).sendKeys(modifiedText + Keys.ENTER);
     }
 
     /**
      * Attempts to send a file from data folder.
      * VERY BETA MANY FILE TYPES AND SIZES may not work
+     *
      * @param fileName
      */
     public void sendMedia(String fileName) {
+        //DO NOT DELYT
+        //   //input[@type='file']
 
         Path path = Paths.get(String.format("data\\%s", fileName));
-        WebElement input = null;
 
+        long sizeInBytes = new File(String.format("data\\%s", fileName)).length();
+        long sizeInMb = sizeInBytes / (1024 * 1024);
+
+        // Can't send files lanrger than 25Mb
+        if(sizeInMb >= 25) {
+            return;
+        }
+
+        WebElement input = null;
         try {
             input = driver.findElement(By.xpath("//div[@data-visualcompletion='ignore']//input[1]"));
         } catch (NoSuchElementException e) {
-            System.err.println("Input element no found");
+            System.err.println("Input element not found");
         }
-
         try {
             input.sendKeys(path.toAbsolutePath().toString());
             driver.findElement(By.xpath("//div[@aria-label='Norėdami išsiųsti, spauskite „Enter“']")).click();
         } catch (InvalidArgumentException e) {
             System.err.println("File not found");
         }
-
     }
 
     /**
      * Attempts to change group photo
+     *
      * @param fileName
      */
     public void changeGroupPhoto(String fileName) {
-
         Path path = Paths.get(String.format("data\\%s", fileName));
 
         try {
             WebElement input = driver.findElement(By.xpath("//input[@accept='.jpg,.png,.jpeg,.bmp,.tif,.tiff']"));
             input.sendKeys(path.toAbsolutePath().toString());
         }
-
-        // If button does not exist tries to click on dropdown button to revel it and click it
+        //If button does not exist tries to click on dropdown button to revel it and click it
         catch (NoSuchElementException e) {
-
-            WebElement moreFunctionDropDown = driver.findElement(By.xpath("//body[1]/div[1]/div[1]/div[1]/div[1]" +
-                    "/div[3]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]" +
-                    "/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/i[1]"));
-
+            WebElement moreFunctionDropDown = driver.findElement(By.xpath("//body[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/i[1]"));
             moreFunctionDropDown.click();
 
             WebElement input = driver.findElement(By.xpath("//input[@accept='.jpg,.png,.jpeg,.bmp,.tif,.tiff']"));
-
             try {
                 input.sendKeys(path.toAbsolutePath().toString());
             } catch (InvalidArgumentException z) {
@@ -93,10 +100,10 @@ public class Interactor {
 
     /**
      * Changes group name
+     *
      * @param name new name
      */
     public void changeGroupName(String name) {
-
         //Tries to click on change chat name button
         try {
             WebElement changeChatName = driver.findElement(By.xpath("//span[contains(text(),'Change Chat Name')]"));

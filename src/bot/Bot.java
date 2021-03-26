@@ -1,5 +1,6 @@
 package bot;
 
+import bot.commands.NameCommand;
 import org.openqa.selenium.By;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.*;
@@ -12,7 +13,6 @@ import java.util.Map;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
 import bot.commands.Command;
 
 public class Bot {
@@ -23,12 +23,11 @@ public class Bot {
     final private Parser parser;
     final private Interpreter interpreter;
 
-    private static final String URL = "https://www.facebook.com/messages/t/example"; // MAIN
-    //private static final String URL = "https://www.facebook.com/messages/t/example"; // TEST
-    private static final String EMAIL = "example@gmail.com";
-    //private static final String EMAIL = "example@gmail.com";
-    private static final String PASSWORD = "example";
-
+    private static final String URL = "https://www.facebook.com/messages/t/xxxxxxxxxx"; //MAIN
+    //private static final String URL = "https://www.facebook.com/messages/t/yyyyyyyyyy"; //ALT
+    private static final String EMAIL = "xxxxxx@gmail.com";
+    //private static final String EMAIL = "yyyyyyyyyy@gmail.com"; EXTRA EMAIL
+    private static final String PASSWORD = "passwordxxxxx";
     private String newestMessage;
 
     /**
@@ -39,14 +38,23 @@ public class Bot {
         // Disable popup
         Map<String, Object> prefs = new HashMap<>();
         prefs.put("profile.default_content_setting_values.notifications", 2);
+
         ChromeOptions options = new ChromeOptions();
+        //options.addArguments("--headless");
+        options.addArguments("--disable-gpu");//reikia LinuxOptions.addArguments("start-maximized");
+        options.addArguments("disable-notifications");
+        options.addArguments("allow-running-insecure-content");
         options.setExperimentalOption("prefs", prefs);
+
+        // System.setProperty("webdriver.chrome.driver","/home/mykolas/Bot/FbBotGrupe/chromedriver");
 
         driver = new ChromeDriver(options);
         interactor = new Interactor(driver);
         reader = new Reader(driver);
         parser = new Parser();
         interpreter = new Interpreter();
+
+        Scheduler.startScheduler(interactor);
 
         WebDriverWait wait = new WebDriverWait(driver, 25);
         login();
@@ -84,20 +92,31 @@ public class Bot {
 
         newestMessage = reader.returnNewMsgData();
         Message message = new Message(newestMessage);
+        HiddenCommandDetector commandDetector = new HiddenCommandDetector(message);
 
-        if (newestMessage.charAt(newestMessage.indexOf("\n") + 1) == '!') {
+        // If user calls command directly
+        if (Command.callableCommands.contains(message.getCommandName())) {
 
             try {
                 parser.parse(message.getCommand());
                 interpreter.interpret(parser.getTokenizer().getTokens(), message);
 
                 Command command = interpreter.getOutputCommand();
-                command.execute(interactor);
+                Scheduler.scheduleProcess(new Process(command));
 
             } catch (Exception exception) {
                 exception.printStackTrace();
-                interactor.sendText(exception.getMessage());
+                Scheduler.scheduleSendText(exception.getMessage());
             }
+        }
+
+        // If command is called implicitly
+        else if(commandDetector.isExecutable()) {
+            Command command = commandDetector.getCommand();
+            Scheduler.scheduleProcess(new Process(command));
+        }
+        else if(message.getCommandName().startsWith("!")) {
+            Scheduler.scheduleSendText("Unknown command");
         }
     }
 

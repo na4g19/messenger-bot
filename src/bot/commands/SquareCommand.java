@@ -2,6 +2,7 @@ package bot.commands;
 
 import bot.HelpDocsBuilder;
 import bot.Interactor;
+import bot.Scheduler;
 
 /**
  * !square command
@@ -37,8 +38,8 @@ public class SquareCommand extends Command
     }
 
     @Override
-    public void execute(Interactor interactor)
+    public void execute()
     {
-        interactor.sendText(num * num + "");
+        Scheduler.scheduleSendText(num * num + "");
     }
 }

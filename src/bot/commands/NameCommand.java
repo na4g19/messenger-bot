@@ -2,6 +2,7 @@ package bot.commands;
 
 import bot.HelpDocsBuilder;
 import bot.Interactor;
+import bot.Scheduler;
 
 /**
  * !name command
@@ -27,7 +28,7 @@ public class NameCommand extends Command {
     }
 
     @Override
-    public void execute(Interactor interactor) {
-        interactor.sendText(name);
+    public void execute() {
+        Scheduler.scheduleSendText(name);
     }
 }

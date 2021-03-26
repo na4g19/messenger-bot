@@ -1,5 +1,6 @@
 package bot;
 
+import bot.commands.Command;
 import bot.exceptions.ParserException;
 
 import java.util.LinkedList;
@@ -10,9 +11,6 @@ import java.util.regex.Pattern;
  * Splints commands into words (tokens)
  */
 public class Tokenizer {
-
-    // FIXME: 20/02/2021 move to command class
-    private String[] commandList = new String[]{"!name", "!square", "!timer", "!help"};
 
     // Rules on how to split
     private LinkedList<TokenInfo> tokenInfos;
@@ -34,10 +32,10 @@ public class Tokenizer {
      */
     private void initTokens() {
 
-        for (String command : commandList) {
+        for (String command : Command.callableCommands) {
             add(command + " ", "COMMAND");
         }
-
+        //FIXME: LIETUVIŠKOS RAIDĖS ĄČĘĖĮŠŲŪ, anglas nx
         add("\\s+", "EMPTY");
         add("[a-zA-Z]+", "WORD");
         add("0|[1-9][0-9]{0,8}", "INTEGER");

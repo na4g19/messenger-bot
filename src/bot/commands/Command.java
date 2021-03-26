@@ -3,6 +3,11 @@ package bot.commands;
 import bot.HelpDocsBuilder;
 import bot.Interactor;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 /**
  * Extended by every command
  */
@@ -10,6 +15,10 @@ public abstract class Command {
 
     // Used to identify the command
     protected final String commandID;
+
+    // Commands that can be called directly
+    public static final Set<String> callableCommands = Stream.of("!name", "!square", "!timer", "!help", "!weather")
+            .collect(Collectors.toCollection(HashSet::new));
 
     public Command(String ID)
     {
@@ -19,7 +28,7 @@ public abstract class Command {
     /**
      * What the command does
      */
-    public abstract void execute(Interactor interactor);
+    public abstract void execute();
 
     /**
      * Description of the command
