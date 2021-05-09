@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/FbBotGrupe.iml" filepath="$PROJECT_DIR$/FbBotGrupe.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/FbGroupBot.iml" filepath="$PROJECT_DIR$/.idea/FbGroupBot.iml" />
     </modules>
   </component>
 </project>
